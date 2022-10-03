@@ -25,7 +25,7 @@ process rename {
         tuple(val(name), path(genome))
 
     output:
-        tuple(val(name), path("${name}.fna"), path("${name}.json"))
+        tuple(val(name), path("${name}.fna.gz"), path("${name}.json"))
 
     script:
         if( params.strict )
@@ -35,7 +35,8 @@ process rename {
 
         else
             """
-            rename.py --name ${name} --genome ${genome} 
+            rename.py --name ${name} --genome ${genome}
+            gzip ${name}.fna
             """
 
 }
