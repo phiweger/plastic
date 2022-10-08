@@ -1,6 +1,7 @@
 process rename {
     cache 'lenient'  // TODO: not sure why this is needed, file sys changes?
     container 'nanozoo/sourmash:4.2.3--ce062ab'
+    publishDir "${params.results}/names", pattern: '*.json', mode: 'copy'
     // errorStrategy 'ignore'
     // debug true
     /*
