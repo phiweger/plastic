@@ -148,22 +148,14 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-# assert 0 <= args.identity <= 1, 'Choose an identity between 0 and 1'
-
-
 try:
     *rest, contig, start, end, strand = parse_paf(
             args.aln, min_ident=args.identity, min_cov=args.coverage)
 except TypeError:
     # No valid hits
-    sys.stdout.write('0')
     sys.exit()
-
 
 header, res = get_sequence(args.genome, contig, start, end, strand)
 with open(args.out, 'w+') as out:
     out.write(f'>{header}\n{res}\n')
-
-
-sys.stdout.write('1')
 sys.exit()
