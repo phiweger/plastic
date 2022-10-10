@@ -17,17 +17,22 @@ include {
 process filt {
     // debug true
     errorStrategy 'ignore'
-    container 'nanozoo/miniprot:2.24--6d307d9'
+    container 'nanozoo/miniprot:2.24--0c673d2'
 
     input:
         tuple(val(name), path(genome), path(aln))
 
     output:
-        tuple(val(name), path(genome), path(aln), env(FOUND))
+        tuple(
+            val(name),
+            path(genome),
+            path(aln),
+            path("${name}.best_hit.faa")
+            ) optional true
 
     script:
     """
-    FOUND=\$(filter_protein_aln.py --identity 0.8 --aln ${aln})
+    filter_protein_aln.py --identity 0.7 --coverage 0.7 --aln ${aln} --genome ${genome} --out ${name}.best_hit.faa
     """
 }
 
@@ -40,22 +45,14 @@ process sketch {
     errorStrategy 'ignore'
 
     input:
-        tuple(val(name), path(genome), path(aln), val(found))
+        tuple(val(name), path(genome), path(aln), path(hit))
 
     output:
         tuple(val(name), path(genome), path(aln), path("${name}.sig"))
 
-    script:
-        if ( found == '1' )
-            """
-            # echo ${name}
-            sourmash sketch dna -p 'k=21,scaled=1000' ${genome} -o ${name}.sig
-            """
-        // else
-        //     // """
-        //     // echo ${genome}
-        //     // """
-        //     error "Not found."
+    """
+    sourmash sketch dna -p 'k=21,scaled=1000' ${genome} -o ${name}.sig
+    """
 }
 
 
@@ -80,9 +77,9 @@ workflow {
     
     // Oftentimes, genome files have associated eg sample names; so we proceed
     // with the (name, path) pattern here.
-    genomes = channel.fromPath("${params.genomes}/**/*{.fna,.fna.gz}")
+    genomes = channel.fromPath("${params.genomes}/*{.fna,.fna.gz}")
                      .map { x -> [x.baseName, x] }
-
+    // genomes = channel.fromPath("${params.genomes}/**/*{.fna,.fna.gz}")
     db = channel.fromPath(params.db)
 
     proteins = channel.fromPath("${params.proteins}")
