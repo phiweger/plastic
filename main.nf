@@ -18,6 +18,7 @@ process filt {
     // debug true
     errorStrategy 'ignore'
     container 'nanozoo/miniprot:2.24--0c673d2'
+    publishDir "${params.results}/proteins", pattern: '*.faa', mode: 'copy'
 
     input:
         tuple(val(name), path(genome), path(aln))
@@ -40,7 +41,7 @@ process filt {
 process sketch {
     // debug true
     container 'nanozoo/sourmash:4.2.3--ce062ab'
-    publishDir "${params.results}/targets", pattern: '*.fna.gz', mode: 'copy'
+    publishDir "${params.results}/genomes", pattern: '*.fna.gz', mode: 'copy'
     publishDir "${params.results}/aln", pattern: '*.paf', mode: 'copy'
     errorStrategy 'ignore'
 

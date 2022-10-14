@@ -32,6 +32,9 @@ from screed import rc
 
 def parse_paf(aln, min_ident=.8, min_cov=.8):
     '''
+    Returns the (single!) best hit from a miniprot alignment if it passes all
+    thresholds.
+
     Spec: 
 
     https://github.com/lh3/miniasm/blob/master/PAF.md
@@ -116,7 +119,9 @@ def parse_paf(aln, min_ident=.8, min_cov=.8):
 
 
 def get_sequence(fp, contig, start, end, strand):
-
+    '''
+    Extract hit sequence, samtools faidx-style; expects compressed genome.fna.gz
+    '''
     with open(fp, 'rb') as file, NamedTemporaryFile() as tmp:
         f = GzipFile(fileobj=file, mode='rb')
         tmp.write(f.read())
