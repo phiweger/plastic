@@ -136,7 +136,7 @@ def get_sequence(fp, contig, start, end, strand):
         # assert len(seq) % 3 == 0
         residues = Seq(fna).translate().__str__()
 
-    return seq.fancy_name, residues
+    return seq.fancy_name, fna, residues
 
 
 parser = argparse.ArgumentParser(description='')
@@ -160,7 +160,9 @@ except TypeError:
     # No valid hits
     sys.exit()
 
-header, res = get_sequence(args.genome, contig, start, end, strand)
-with open(args.out, 'w+') as out:
+header, fna, res = get_sequence(args.genome, contig, start, end, strand)
+with open(args.out + '.fna', 'w+') as out:
+    out.write(f'>{header}\n{fna}\n')
+with open(args.out + '.faa', 'w+') as out:
     out.write(f'>{header}\n{res}\n')
 sys.exit()

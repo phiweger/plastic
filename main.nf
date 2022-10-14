@@ -19,6 +19,7 @@ process filt {
     errorStrategy 'ignore'
     container 'nanozoo/miniprot:2.24--0c673d2'
     publishDir "${params.results}/proteins", pattern: '*.faa', mode: 'copy'
+    publishDir "${params.results}/coding", pattern: '*.fna', mode: 'copy'
 
     input:
         tuple(val(name), path(genome), path(aln))
@@ -33,7 +34,7 @@ process filt {
 
     script:
     """
-    filter_protein_aln.py --identity 0.7 --coverage 0.7 --aln ${aln} --genome ${genome} --out ${name}.best_hit.faa
+    filter_protein_aln.py --identity 0.7 --coverage 0.7 --aln ${aln} --genome ${genome} --out ${name}.best_hit
     """
 }
 
