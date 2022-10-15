@@ -29,7 +29,8 @@ process filt {
             val(name),
             path(genome),
             path(aln),
-            path("${name}.best_hit.faa")
+            path("${name}.best_hit.fna"),
+            path("${name}.best_hit.faa"),
             ) optional true
 
     script:
@@ -47,7 +48,7 @@ process sketch {
     errorStrategy 'ignore'
 
     input:
-        tuple(val(name), path(genome), path(aln), path(hit))
+        tuple(val(name), path(genome), path(aln), path(fna), path(faa))
 
     output:
         tuple(val(name), path(genome), path(aln), path("${name}.sig"))
@@ -87,7 +88,7 @@ workflow {
     proteins = channel.fromPath("${params.proteins}")
     
     if (params.debug)
-        genomes.take(5000) | wf_sanitize
+        genomes.take(200) | wf_sanitize
         // .randomSample() is not chached
     else
         genomes | wf_sanitize
@@ -95,7 +96,7 @@ workflow {
     
     // name_map = wf_sanitize.out.name_map    
 
-    wf_sanitize.out.cleanomes.combine(proteins) | map_proteins | filt | sketch
+    wf_sanitize.out.cleanomes | combine(proteins) | map_proteins | filt | sketch
     //filt.out.view()
     //sketch(filt.out)
     //filt(map_proteins.out)

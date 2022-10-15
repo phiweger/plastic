@@ -154,7 +154,7 @@ args = parser.parse_args()
 
 
 try:
-    *rest, contig, start, end, strand = parse_paf(
+    _, qry, contig, start, end, strand = parse_paf(
             args.aln, min_ident=args.identity, min_cov=args.coverage)
 except TypeError:
     # No valid hits
@@ -162,7 +162,7 @@ except TypeError:
 
 header, fna, res = get_sequence(args.genome, contig, start, end, strand)
 with open(args.out + '.fna', 'w+') as out:
-    out.write(f'>{header}\n{fna}\n')
+    out.write(f'>{header}::{qry}\n{fna}\n')
 with open(args.out + '.faa', 'w+') as out:
-    out.write(f'>{header}\n{res}\n')
+    out.write(f'>{header}::{qry}\n{res}\n')
 sys.exit()
