@@ -1,4 +1,4 @@
-include { rename; checksum; merge_names } from './processes/utils.nf'
+include { rename; checksum; merge_names; minlen } from './processes/utils.nf'
 
 
 workflow sanitize {
@@ -6,9 +6,10 @@ workflow sanitize {
         genomes
 
     main:
-        cs = genomes | checksum | map { i -> [i[1], i[2]] }
-        rename(cs) | map(it -> it[2]) | collect | merge_names
-        rename.out.map { i -> [i[0], i[1]] } | minlen
+        genomes | checksum | map { i -> [i[1], i[2]] } | rename
+
+        rename.out | map { i -> i[2] } | collect | merge_names
+        rename.out | map { i -> [i[0], i[1]] } | minlen
 
     emit:
         // https://www.nextflow.io/docs/edge/dsl2.html#workflow-named-output
