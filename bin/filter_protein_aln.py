@@ -158,11 +158,20 @@ try:
             args.aln, min_ident=args.identity, min_cov=args.coverage)
 except TypeError:
     # No valid hits
-    sys.exit()
+    sys.stdout.write('nomatch')
+    sys.exit(0) 
+    # In the surrounding process, we make output optional, so here we need not
+    # err out using eg sys.exit(-1)
 
 header, fna, res = get_sequence(args.genome, contig, start, end, strand)
+
+# out = path(args.out)
+# out.mkdir(exist_ok=True)
+
 with open(args.out + '.fna', 'w+') as out:
     out.write(f'>{header}::{qry}\n{fna}\n')
 with open(args.out + '.faa', 'w+') as out:
     out.write(f'>{header}::{qry}\n{res}\n')
-sys.exit()
+
+sys.stdout.write(qry)
+sys.exit(0)

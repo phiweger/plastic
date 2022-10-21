@@ -1,4 +1,7 @@
 nextflow.enable.dsl = 2
+// include {sayHello} from './some/module' addParams(foo: 'Ciao')
+// https://www.nextflow.io/docs/latest/dsl2.html#module-aliases
+
 
 /*
 nextflow run plastic/main.nf --genomes gtdb_genomes_reps_r207 --proteins plastic/data/pet.faa --db gtdb-rs207.genomic.k21.lca.json.gz --results results -resume --debug
@@ -10,8 +13,9 @@ include {
 
 
 include { 
-    wf_sanitize
-    } from './workflows/sanitize.nf'
+    sanitize as clean_genomes
+    sanitize as clean_proteins
+    } from './modules/sanitize/main.nf'
 
 
 process filt {
@@ -26,6 +30,7 @@ process filt {
 
     output:
         tuple(
+            env(QRY),
             val(name),
             path(genome),
             path(aln),
@@ -35,7 +40,7 @@ process filt {
 
     script:
     """
-    filter_protein_aln.py --identity 0.7 --coverage 0.7 --aln ${aln} --genome ${genome} --out ${name}.best_hit
+    QRY=\$(filter_protein_aln.py --identity 0.7 --coverage 0.7 --aln ${aln} --genome ${genome} --out ${name}.best_hit)
     """
 }
 
@@ -48,7 +53,7 @@ process sketch {
     errorStrategy 'ignore'
 
     input:
-        tuple(val(name), path(genome), path(aln), path(fna), path(faa))
+        tuple(val(group), val(name), path(genome), path(aln), path(fna), path(faa))
 
     output:
         tuple(val(name), path(genome), path(aln), path("${name}.sig"))
@@ -86,23 +91,46 @@ workflow {
     db = channel.fromPath(params.db)
 
     proteins = channel.fromPath("${params.proteins}")
-    
+
+    /*
+    TODO: Clean protein file, too
+
+    foo = channel.fromPath("${params.proteins}")
+                      .map { x -> [x.baseName, x] }
+    clean_proteins(foo)
+    */
+
     if (params.debug)
-        genomes.take(200) | wf_sanitize
+        genomes.take(200) | clean_genomes
         // .randomSample() is not chached
     else
-        genomes | wf_sanitize
+        genomes | clean_genomes
 
     
     // name_map = wf_sanitize.out.name_map    
+    // proteins | wf_sanitize
 
-    wf_sanitize.out.cleanomes | combine(proteins) | map_proteins | filt | sketch
+    clean_genomes.out.sequences | combine(proteins) | map_proteins | filt
+
+    //filt.out.view()
+    
     //filt.out.view()
     //sketch(filt.out)
     //filt(map_proteins.out)
 
-    //sketch(filt.out)
-    taxa(sketch.out.map { it -> [it[3]] }.collect(), db)
+    // fn = { it -> [it[0], it[1..-1]]}
+    // x = filt.out.map(fn)
+    // y = filt.out
+    // x.join(x)
+    // y.join(y, by: 0).view()
+    filt.out.groupTuple().map { it -> [it[0], it[1]] }.transpose().view()
+    // transpose() i opposite of groupTuple
+    // filt.out.join().view()
+    
+    // .map{it -> [it[1], it[2]]}
+
+    sketch(filt.out)
+    // taxa(sketch.out.map { it -> [it[3]] }.collect(), db)
 
 }
 
