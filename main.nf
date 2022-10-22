@@ -13,7 +13,6 @@ include {
     sanitize as clean_proteins
     } from './modules/sanitize/main.nf'
 
-
 include { taxa } from './modules/taxa/main.nf'
 include { map_proteins } from './modules/map_proteins/main.nf'
 
@@ -22,9 +21,8 @@ workflow {
     
     // Oftentimes, genome files have associated eg sample names; so we proceed
     // with the (name, path) pattern here.
-    suffix = '*{.fna,.fna.gz,.fasta,.fasta.gz}'
-    genomes = channel.fromPath("${params.genomes}/${suffix}")
-                     .map { x -> [x.baseName, x] }
+    fp = "${params.genomes}/${params.pattern}"
+    genomes = channel.fromPath(fp) | map { i -> [i.baseName, i] }
 
     db = channel.fromPath(params.db)
 
